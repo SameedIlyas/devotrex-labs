@@ -1,0 +1,103 @@
+@import "tailwindcss";
+/* layer(components) is load-bearing: unlayered CSS outranks every Tailwind
+   utility regardless of specificity. Inside `components`, utilities win. */
+@import "./styles/agencee.css" layer(components);
+
+/* ═══════════════════════════════════════════════════════════════
+   AGENCEE SYSTEM · lifted from devotrex.com (website/src/index.css).
+   Two near-whites, near-black navy ink, one blue accent. Keep the
+   values in sync with the main site so labs.devotrex.com reads as
+   the same brand.
+   ═══════════════════════════════════════════════════════════════ */
+@theme {
+  /* ─── CANVAS ─── */
+  --color-paper:      #F7F7F7;
+  --color-paper-deep: #EFF0F0;
+  --color-card:       #FFFFFF;
+
+  /* ─── INK ─── */
+  --color-ink:        #070C16;
+  --color-ink-soft:   #505050;
+  --color-ink-mute:   #6B6B6B;
+  --color-ink-faint:  #9A9A9A;
+
+  /* ─── BRAND ─── */
+  --color-navy:       #16223F;
+  --color-accent:     #35548F;   /* the single accent — wordmark blue */
+  --color-accent-bg:  #E9EDF7;
+  --color-rule:       #E3E5E5;
+
+  /* ─── TYPOGRAPHY · one face, set light at display sizes ─── */
+  --font-sans:    'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* ─── MOTION ─── */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root {
+  --fx-hairline: rgba(10, 10, 10, 0.10);
+}
+
+::selection { background: var(--color-ink); color: var(--color-paper); }
+
+/* ─── BASE ─── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  overflow-x: clip;
+  font-family: var(--font-sans);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+}
+
+@layer base {
+  a { color: inherit; text-decoration: none; }
+  strong { color: var(--color-ink); font-weight: 600; }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 300;
+    letter-spacing: -0.035em;
+    color: var(--color-ink);
+    line-height: 1.08;
+    margin: 0;
+  }
+  p { color: var(--color-ink-soft); margin: 0; }
+  :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+}
+
+/* Scroll progress bar — drawn by components/ScrollProgress.tsx */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 60;
+  pointer-events: none;
+}
+.scroll-progress::after {
+  content: '';
+  display: block;
+  height: 100%;
+  width: var(--scroll-progress, 0%);
+  background: var(--color-ink);
+  transition: width 90ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
