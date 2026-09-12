@@ -138,9 +138,15 @@
   margin-inline: 0;
 }
 
-/* ─── 6 · Frosted headline pill · asymmetric padding centres Jakarta's ink ─── */
+/* ─── 6 · Frosted headline pill · asymmetric padding centres Jakarta's ink ───
+   The top margin keeps the line above visible: at line-height ~1.06 the
+   previous line's descenders hang ~0.2em into this pill's top edge, and its
+   frosted fill blurred them away. An inline-block's margin counts toward its
+   line box, so 0.2em drops the pill line clear (≥0.08em of air in the
+   tightest case, a "y" directly above). Mirrored on devotrex.com. */
 .ag-glass {
   display: inline-block;
+  margin-top: 0.2em;
   border-radius: 100px;
   padding: 0.04em 0.5em 0.24em;
   background: rgba(255, 255, 255, 0.32);
