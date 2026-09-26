@@ -1,33 +1,38 @@
 import { Footer } from './components/Footer';
 import { Navbar } from './components/Navbar';
-import { ScrollProgress } from './components/ScrollProgress';
+import { About } from './sections/About';
+import { Capabilities } from './sections/capabilities/Capabilities';
+import { Catalogue } from './sections/Catalogue';
+import { Contact } from './sections/Contact';
 import { Engagement } from './sections/Engagement';
-import { FinalCta } from './sections/FinalCta';
+import { Faq } from './sections/Faq';
 import { Hero } from './sections/Hero';
-import { Positioning } from './sections/Positioning';
 import { Process } from './sections/Process';
-import { Services } from './sections/Services';
 import { Stack } from './sections/Stack';
+import { Value } from './sections/Value';
 
-/* labs.devotrex.com is one page: the catalogue reads top to bottom,
-   and every nav item is an anchor into it. */
+/* devotrex is one page: numbered sections read top to bottom,
+   and every menu item is an anchor into it. The page opens and closes
+   on the same navy field. */
 export default function App() {
   return (
-    <>
-      <ScrollProgress />
-      <div className="flex min-h-screen flex-col bg-paper font-sans text-ink">
-        <Navbar />
-        <main className="relative flex-grow">
-          <Hero />
-          <Positioning />
-          <Engagement />
-          <Services />
-          <Process />
-          <Stack />
-          <FinalCta />
-        </main>
-        <Footer />
-      </div>
-    </>
+    <div className="flex min-h-screen flex-col bg-paper font-sans text-ink">
+      <Navbar />
+      <main className="relative flex-grow">
+        <Hero />
+        <About />
+        <Value />
+        <Capabilities />
+        <Process />
+        <Catalogue />
+        <Stack />
+        <Engagement />
+        <Faq />
+        <div className="bg-gradient-to-b from-paper via-navy to-navy-deep via-20%">
+          <Contact />
+          <Footer />
+        </div>
+      </main>
+    </div>
   );
 }

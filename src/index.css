@@ -1,18 +1,19 @@
 @import "tailwindcss";
 /* layer(components) is load-bearing: unlayered CSS outranks every Tailwind
    utility regardless of specificity. Inside `components`, utilities win. */
-@import "./styles/agencee.css" layer(components);
+@import "./styles/site.css" layer(components);
 
 /* ═══════════════════════════════════════════════════════════════
-   AGENCEE SYSTEM · lifted from devotrex.com (website/src/index.css).
-   Two near-whites, near-black navy ink, one blue accent. Keep the
-   values in sync with the main site so labs.devotrex.com reads as
-   the same brand.
+   DEVOTREX PALETTE on a soft-card layout. The structure and motion
+   follow a rounded, grey-card Framer layout; every colour below is
+   the devotrex.com brand: near-white paper, navy ink, one blue
+   accent. The template's pastel "sheen" gradient is rebuilt as a
+   ramp of that accent blue so it reads as the same brand.
    ═══════════════════════════════════════════════════════════════ */
 @theme {
   /* ─── CANVAS ─── */
-  --color-paper:      #F7F7F7;
-  --color-paper-deep: #EFF0F0;
+  --color-paper:      #FFFFFF;
+  --color-paper-deep: #F2F3F5;   /* card fill */
   --color-card:       #FFFFFF;
 
   /* ─── INK ─── */
@@ -23,30 +24,42 @@
 
   /* ─── BRAND ─── */
   --color-navy:       #16223F;
-  --color-accent:     #35548F;   /* the single accent — wordmark blue */
+  --color-navy-deep:  #0B1328;
+  --color-accent:     #35548F;
   --color-accent-bg:  #E9EDF7;
+  --color-sheen-1:    #9DB1E0;   /* accent ramp for the sheen gradient */
+  --color-sheen-2:    #D6DFF3;
+  --color-sheen-3:    #6F8CCB;
   --color-rule:       #E3E5E5;
 
-  /* ─── TYPOGRAPHY · one face, set light at display sizes ─── */
-  --font-sans:    'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* ─── TYPOGRAPHY ─── */
+  --font-sans:    'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* ─── MOTION ─── */
   --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :root {
-  --fx-hairline: rgba(10, 10, 10, 0.10);
+  --fx-hairline: rgba(7, 12, 22, 0.10);
+  --sheen: linear-gradient(
+    90deg,
+    var(--color-sheen-1) 0%,
+    var(--color-sheen-2) 28%,
+    #FFFFFF 50%,
+    var(--color-sheen-3) 74%,
+    var(--color-sheen-1) 100%
+  );
 }
 
-::selection { background: var(--color-ink); color: var(--color-paper); }
+::selection { background: var(--color-navy); color: #fff; }
 
 /* ─── BASE ─── */
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 88px;
+  scroll-padding-top: 100px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -58,9 +71,9 @@ body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.5;
   font-weight: 400;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.01em;
 }
 
 @layer base {
@@ -69,33 +82,14 @@ body {
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    font-weight: 300;
-    letter-spacing: -0.035em;
+    font-weight: 500;
+    letter-spacing: -0.04em;
     color: var(--color-ink);
-    line-height: 1.08;
+    line-height: 1.05;
     margin: 0;
   }
   p { color: var(--color-ink-soft); margin: 0; }
   :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
-}
-
-/* Scroll progress bar — drawn by components/ScrollProgress.tsx */
-.scroll-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  z-index: 60;
-  pointer-events: none;
-}
-.scroll-progress::after {
-  content: '';
-  display: block;
-  height: 100%;
-  width: var(--scroll-progress, 0%);
-  background: var(--color-ink);
-  transition: width 90ms linear;
 }
 
 @media (prefers-reduced-motion: reduce) {

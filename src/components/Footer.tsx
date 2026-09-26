@@ -1,87 +1,62 @@
-import { pillars } from '../data/services';
-import { BOOKING_URL, CONTACT_EMAIL, CONTACT_MAILTO, MAIN_SITE_URL } from '../lib/links';
-import { LabsLockup } from './Navbar';
+import { ArrowUpRight } from 'lucide-react';
+import { Appear } from './motion';
+import { BOOKING_URL, CONTACT_EMAIL, CONTACT_MAILTO } from '../lib/links';
 
 /* ── footer ───────────────────────────────────────────────────────
-   The main site's light colophon: small caps column heads over a
-   dotted rule, underlined links. The last column points back to
-   devotrex.com so the two properties link both ways. */
+   On the closing navy field: a row of outbound links, a row of section
+   links, then the colophon with an oversized fading wordmark. */
 
-interface FooterLink {
-  name: string;
-  href: string;
-  external?: boolean;
-}
+const outbound = [
+  { name: 'Book a call', href: BOOKING_URL },
+  { name: CONTACT_EMAIL, href: CONTACT_MAILTO, internal: true },
+];
 
-const columns: readonly { title: string; links: readonly FooterLink[] }[] = [
-  {
-    title: 'Services',
-    links: pillars.map((p) => ({ name: p.short, href: `#${p.id}` })),
-  },
-  {
-    title: 'Working with us',
-    links: [
-      { name: 'Engagement models', href: '#engagement' },
-      { name: 'How we work', href: '#process' },
-      { name: 'Tech stack', href: '#stack' },
-    ],
-  },
-  {
-    title: 'Contact',
-    links: [
-      { name: 'Book a scoping call', href: BOOKING_URL, external: true },
-      { name: CONTACT_EMAIL, href: CONTACT_MAILTO },
-    ],
-  },
-  {
-    title: 'Devotrex',
-    links: [{ name: 'devotrex.com ↗', href: MAIN_SITE_URL }],
-  },
+const sections = [
+  { name: 'Services', href: '#services' },
+  { name: 'Process', href: '#process' },
+  { name: 'Catalogue', href: '#catalogue' },
+  { name: 'Stack', href: '#stack' },
+  { name: 'Engagement', href: '#engagement' },
 ];
 
 export function Footer() {
   return (
-    <footer className="relative z-10 bg-paper text-ink-soft">
-      <div className="mx-auto max-w-[calc(1200px+2*clamp(20px,4vw,40px))] px-[clamp(20px,4vw,40px)] pt-4 pb-14">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,3fr)] lg:gap-16">
-          <div>
-            <div className="mb-5">
-              <LabsLockup size="lg" />
-            </div>
-            <p className="text-[17px] leading-[1.5] font-medium text-ink">The team behind your delivery.</p>
-            <p className="mt-3 max-w-[38ch] text-[13.5px] leading-relaxed text-ink-soft">
-              White-label AI, automation and software engineering for boutique consultancies and
-              agencies. The engineering arm of Devotrex.
-            </p>
-          </div>
+    <footer data-nav-theme="dark" className="px-[clamp(16px,4vw,40px)] pb-8 text-white">
+      <div className="wrap-wide">
+        <ul className="m-0 flex list-none flex-wrap justify-between gap-x-8 gap-y-4 border-b border-white/15 p-0 pb-8">
+          {outbound.map((l) => (
+            <li key={l.name}>
+              <a
+                href={l.href}
+                className="group inline-flex items-center gap-2 text-[17px] font-medium text-white/90 hover:text-white"
+                {...(l.internal ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+              >
+                {l.name}
+                <ArrowUpRight size={15} className="text-white/50 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </a>
+            </li>
+          ))}
+        </ul>
 
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-            {columns.map((col) => (
-              <div key={col.title}>
-                <div className="text-[11px] font-semibold tracking-[0.09em] uppercase text-ink">{col.title}</div>
-                <hr className="ag-dotted mt-3 mb-4" />
-                <ul className="m-0 list-none space-y-2.5 p-0">
-                  {col.links.map((l) => (
-                    <li key={l.href}>
-                      <a
-                        href={l.href}
-                        className="text-[13.5px] break-words text-ink-soft underline-offset-4 transition-colors hover:text-ink hover:underline"
-                        {...(l.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                      >
-                        {l.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
+        <nav aria-label="Footer" className="flex flex-wrap justify-between gap-x-8 gap-y-3 pt-8">
+          {sections.map((l) => (
+            <a key={l.href} href={l.href} className="text-[16px] text-white/70 transition-colors hover:text-white">
+              {l.name}
+            </a>
+          ))}
+        </nav>
 
-        <hr className="ag-dotted mt-14" />
-        <div className="flex flex-col justify-between gap-3 pt-6 text-[12px] text-ink-faint md:flex-row">
-          <span>© {new Date().getFullYear()} Devotrex Labs · All rights reserved.</span>
-          <span>White-label by default. Your brand, your client, our engineering.</span>
+        <Appear y={30} className="mt-20">
+          <div
+            className="bg-gradient-to-b from-white/70 to-white/0 bg-clip-text text-center text-[clamp(3.4rem,15vw,12rem)] leading-[0.9] font-semibold tracking-[-0.07em] whitespace-nowrap text-transparent select-none"
+            aria-hidden
+          >
+            devotrex
+          </div>
+        </Appear>
+        <div className="mt-6 flex flex-col justify-between gap-2 text-[14px] text-white/55 md:flex-row">
+          <span>© {new Date().getFullYear()} Devotrex · All rights reserved.</span>
+          <span>White-label by default. Your brand, our engineering.</span>
         </div>
       </div>
     </footer>

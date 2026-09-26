@@ -1,14 +1,17 @@
-# Devotrex Labs — labs.devotrex.com
+# Devotrex — devotrex.com
 
-One-page site for Devotrex Labs, the white-label engineering arm of Devotrex.
-It uses the same Agencee design system as devotrex.com (`../website`), and the
-tokens and primitives are copied from there, so keep them in sync:
+One-page site for Devotrex, the white-label engineering partner for boutique
+consultancies and agencies. React 19 + Vite + Tailwind v4 + framer-motion.
 
-| Here | Source on the main site |
+## Structure
+
+| Path | What it holds |
 | --- | --- |
-| `src/index.css` (`@theme`) | `website/src/index.css` |
-| `src/styles/agencee.css` | `website/src/styles/agencee.css` + AGENCEE LAYER tokens |
-| `src/components/agencee/*` | `website/src/components/agencee/*` |
+| `src/index.css` | Brand tokens (`@theme`): navy, accent blue, ink, Geist |
+| `src/styles/site.css` | Layout, buttons, cards, dark tiles, sheen gradient |
+| `src/components/motion.tsx` | Shared animations: entrances, word reveals, scroll-lit text, marquee |
+| `src/components/ui.tsx` | Section header, buttons, arrow link |
+| `src/sections/` | One file per page section, in page order in `src/App.tsx` |
 
 ## Content
 
@@ -32,9 +35,7 @@ npm run build    # type-check + production build to dist/
 
 ## Deploy (Vercel)
 
-1. Create a new Vercel project from this folder (framework preset: Vite).
-2. Under Project → Settings → Domains, add `labs.devotrex.com`.
-3. At your DNS provider, add a `CNAME` record: `labs` → `cname.vercel-dns.com`.
-
-The main site links here from its Company menu and footer, and
-`devotrex.com/labs` redirects here (`website/vercel.json`).
+1. Create a Vercel project from this folder (framework preset: Vite).
+2. Under Project → Settings → Domains, add `devotrex.com` (and `www.devotrex.com`).
+3. At your DNS provider, point the apex `A` record at Vercel (`76.76.21.21`) and
+   `www` as a `CNAME` to `cname.vercel-dns.com`.

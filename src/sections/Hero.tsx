@@ -1,100 +1,78 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { FlaskConical } from 'lucide-react';
-import { AgWords } from '../components/agencee/AgWords';
-import { AgButton, AgEyebrow } from '../components/agencee/primitives';
-import { engagementModels } from '../data/company';
-import { pillars, serviceCount } from '../data/services';
+import { Sparkles } from 'lucide-react';
+import { Marquee, SPRING, TWEEN_EASE, WordsBlurIn } from '../components/motion';
+import { Button } from '../components/ui';
+import { stack } from '../data/company';
 
 /* ── hero ──────────────────────────────────────────────────────────
-   The main site's hero device: a centred column on the animated mesh
-   with a dot matrix, light display type, and the final phrase in the
-   frosted pill. Where devotrex.com runs a platform-logo row under the
-   CTAs, Labs runs the catalogue's own numbers. */
+   Centred column on a drifting navy field: a two-line
+   sheen headline whose words de-blur in, lede, two CTAs, and a
+   running strip of the tools we build with. Entrance order and
+   timings follow the template: words from 0.5s, lede
+   0.6s, CTAs 0.8s, strip 1.5s. */
 
-const EASE = [0.16, 1, 0.3, 1] as const;
-
-const facts = [
-  { n: String(pillars.length), l: 'service pillars' },
-  { n: String(serviceCount), l: 'defined services' },
-  { n: String(engagementModels.length), l: 'ways to engage' },
-  { n: '1–2 wk', l: 'first engagements' },
-] as const;
+const tools = stack.flatMap((g) => g.tools);
 
 export function Hero() {
   const reduced = useReducedMotion();
-  const rise = (delay: number) =>
+  const enter = (delay: number, y: number, tween = false) =>
     reduced
       ? {}
       : {
-          initial: { opacity: 0, y: 10 },
+          initial: { opacity: 0, y },
           animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.7, delay, ease: EASE },
+          transition: tween ? { delay, duration: 1, ease: TWEEN_EASE } : { ...SPRING, delay },
         };
 
   return (
-    <section id="top" className="relative isolate -mt-[72px] overflow-hidden bg-paper">
-      <div className="ag-mesh" aria-hidden>
-        <div className="ag-mesh__blob" />
-        <div className="ag-mesh__dots" />
+    <section id="top" className="relative isolate overflow-hidden">
+      <div className="hero-field" aria-hidden>
+        <div className="hero-field__glow hero-field__glow--a" />
+        <div className="hero-field__glow hero-field__glow--b" />
       </div>
 
-      <div className="relative mx-auto flex max-w-[1000px] flex-col items-center px-5 pt-40 pb-24 text-center md:px-10 md:pt-48 md:pb-32">
-        <motion.div {...rise(0)}>
-          <AgEyebrow icon={<FlaskConical />}>
-            {/* One text node for the flex item: split across two items, the
-                eyebrow's 7px flex gap doubled the space after the dot. */}
-            <span>
-              <span className="hidden sm:inline">Devotrex Labs · </span>White-label engineering
-            </span>
-          </AgEyebrow>
-        </motion.div>
-
-        {/* 8.4vw below the cap so the pill phrase always fits on one line:
-            a 38px floor wrapped "under your brand" inside its pill at 320px. */}
-        <h1 className="ag-display mt-8 text-[clamp(1.9rem,8.4vw,4.6rem)]">
-          <AgWords
-            text="The engineering team behind your delivery,"
-            highlight={<span className="ag-glass whitespace-nowrap">under your brand</span>}
-            delay={0.15}
-          />
+      <div data-nav-theme="dark" className="mx-auto flex min-h-[100svh] max-w-[1100px] flex-col items-center justify-center px-4 pt-36 pb-20 text-center md:pt-44">
+        <h1 className="text-[clamp(2.6rem,7.4vw,5.6rem)] leading-[0.98] font-medium tracking-[-0.06em]">
+          <WordsBlurIn text="The engineering team behind your delivery" wordClassName="sheen-text pb-[0.08em]" />
         </h1>
 
-        <motion.p className="ag-lede mt-7 max-w-[58ch] text-[17px]" {...rise(0.5)}>
+        <motion.p className="mt-7 max-w-[600px] text-[17px] leading-[1.45] text-white/85 md:text-[18px]" {...enter(0.6, 20)}>
           AI, automation, full-stack and legacy-systems engineering for boutique consultancies and
-          agencies. Scoped small to start, delivered white-label, and built to the standard your
-          clients already expect from you.
+          agencies, delivered under your brand.
         </motion.p>
 
-        <motion.div className="mt-10 flex flex-wrap items-center justify-center gap-3" {...rise(0.62)}>
-          <AgButton variant="light" href="#services">
-            Explore services
-          </AgButton>
-          <AgButton href="#contact" arrow>
+        <motion.div className="mt-12 flex flex-wrap items-center justify-center gap-3" {...enter(0.8, 20)}>
+          <Button href="#contact" arrow>
             Scope a project
-          </AgButton>
+          </Button>
+          <Button
+            href="#services"
+            variant="glass"
+            leading={
+              <span className="flex -space-x-2" aria-hidden>
+                <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border-2 border-white/60 bg-navy">
+                  <img src="/devotrex-logo-2026.png" alt="" className="h-full w-full scale-[1.9] object-cover" />
+                </span>
+                <span className="grid h-9 w-9 place-items-center rounded-full border-2 border-white/60 bg-accent text-white">
+                  <Sparkles size={15} />
+                </span>
+              </span>
+            }
+          >
+            Explore services
+          </Button>
         </motion.div>
-
-        <motion.ul
-          className="mt-16 grid w-full max-w-[760px] grid-cols-2 gap-3 p-0 sm:grid-cols-4"
-          {...(reduced
-            ? {}
-            : {
-                initial: { opacity: 0 },
-                animate: { opacity: 1 },
-                transition: { duration: 0.8, delay: 0.8 },
-              })}
-        >
-          {facts.map((f) => (
-            <li
-              key={f.l}
-              className="list-none rounded-2xl border border-white/60 bg-white/50 px-4 py-3.5 backdrop-blur-sm"
-            >
-              <div className="text-[24px] leading-none font-light tracking-[-0.03em] text-ink">{f.n}</div>
-              <div className="mt-1.5 text-[12px] font-medium text-ink-soft">{f.l}</div>
-            </li>
-          ))}
-        </motion.ul>
       </div>
+
+      <motion.div className="relative -mt-4 pb-40" {...enter(1.5, 40)}>
+        <Marquee speed={100} gap={72} className="fade-x mx-auto max-w-[1440px]">
+          {tools.map((t) => (
+            <span key={t} className="text-[22px] font-semibold tracking-[-0.04em] whitespace-nowrap text-white/80">
+              {t}
+            </span>
+          ))}
+        </Marquee>
+      </motion.div>
     </section>
   );
 }
