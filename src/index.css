@@ -4,62 +4,49 @@
 @import "./styles/site.css" layer(components);
 
 /* ═══════════════════════════════════════════════════════════════
-   DEVOTREX PALETTE on a soft-card layout. The structure and motion
-   follow a rounded, grey-card Framer layout; every colour below is
-   the devotrex.com brand: near-white paper, navy ink, one blue
-   accent. The template's pastel "sheen" gradient is rebuilt as a
-   ramp of that accent blue so it reads as the same brand.
+   DEVOTREX ON A DARK EDITORIAL LAYOUT. Structure and motion follow a
+   near-black Framer agency layout (serif display, grain, halftone
+   light); the template's green is replaced throughout by the
+   devotrex.com blues: navy, accent and its lighter sheen ramp.
    ═══════════════════════════════════════════════════════════════ */
 @theme {
   /* ─── CANVAS ─── */
-  --color-paper:      #FFFFFF;
-  --color-paper-deep: #F2F3F5;   /* card fill */
-  --color-card:       #FFFFFF;
+  --color-bg:         #05080F;
+  --color-surface:    #0B1120;   /* cards */
+  --color-surface-2:  #121B2F;   /* chips, raised controls */
+  --color-line:       rgba(255, 255, 255, 0.08);
 
   /* ─── INK ─── */
-  --color-ink:        #070C16;
-  --color-ink-soft:   #505050;
-  --color-ink-mute:   #6B6B6B;
-  --color-ink-faint:  #9A9A9A;
+  --color-ink:        #FFFFFF;
+  --color-ink-soft:   rgba(255, 255, 255, 0.64);
+  --color-ink-mute:   rgba(255, 255, 255, 0.42);
 
-  /* ─── BRAND ─── */
+  /* ─── BRAND BLUES ─── */
   --color-navy:       #16223F;
   --color-navy-deep:  #0B1328;
   --color-accent:     #35548F;
-  --color-accent-bg:  #E9EDF7;
-  --color-sheen-1:    #9DB1E0;   /* accent ramp for the sheen gradient */
-  --color-sheen-2:    #D6DFF3;
-  --color-sheen-3:    #6F8CCB;
-  --color-rule:       #E3E5E5;
+  --color-blue:       #6F8CCB;   /* highlight blue, stands in for the template green */
+  --color-blue-soft:  #9DB1E0;
+  --color-blue-pale:  #D6DFF3;
 
   /* ─── TYPOGRAPHY ─── */
-  --font-sans:    'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans:  'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
 
   /* ─── MOTION ─── */
-  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-:root {
-  --fx-hairline: rgba(7, 12, 22, 0.10);
-  --sheen: linear-gradient(
-    90deg,
-    var(--color-sheen-1) 0%,
-    var(--color-sheen-2) 28%,
-    #FFFFFF 50%,
-    var(--color-sheen-3) 74%,
-    var(--color-sheen-1) 100%
-  );
-}
-
-::selection { background: var(--color-navy); color: #fff; }
+::selection { background: var(--color-blue); color: #fff; }
 
 /* ─── BASE ─── */
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 100px;
+  scroll-padding-top: 96px;
+  background: var(--color-bg);
+  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -68,28 +55,26 @@ body {
   margin: 0;
   overflow-x: clip;
   font-family: var(--font-sans);
-  background: var(--color-paper);
+  background: var(--color-bg);
   color: var(--color-ink);
   font-size: 16px;
   line-height: 1.5;
-  font-weight: 400;
   letter-spacing: -0.01em;
 }
 
 @layer base {
   a { color: inherit; text-decoration: none; }
-  strong { color: var(--color-ink); font-weight: 600; }
 
   h1, h2, h3, h4 {
-    font-family: var(--font-display);
-    font-weight: 500;
-    letter-spacing: -0.04em;
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.025em;
     color: var(--color-ink);
-    line-height: 1.05;
+    line-height: 1.04;
     margin: 0;
   }
   p { color: var(--color-ink-soft); margin: 0; }
-  :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--color-blue-soft); outline-offset: 3px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

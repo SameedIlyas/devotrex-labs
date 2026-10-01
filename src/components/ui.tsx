@@ -1,38 +1,45 @@
 import { ArrowRight } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Appear, WordsIn } from './motion';
+import { WordsIn } from './motion';
 
 /* ── shared UI ─────────────────────────────────────────────────────
-   Section header (heading, lede) and the pill buttons.
-   This site has no router, so every link is a plain anchor. */
+   Section heading and the square-cornered buttons whose label rolls
+   on hover. No router: every link is a plain anchor. */
 
-interface SectionHeaderProps {
+interface SectionHeadProps {
   title: string;
-  lede?: string;
+  align?: 'center' | 'left';
   className?: string;
 }
 
-export function SectionHeader({ title, lede, className = '' }: SectionHeaderProps) {
+export function SectionHead({ title, align = 'center', className = '' }: SectionHeadProps) {
+  const centred = align === 'center';
   return (
-    <header className={`flex flex-col items-center text-center ${className}`}>
-      <h2 className="h-section max-w-[16ch]">
+    <header className={`flex flex-col ${centred ? 'items-center text-center' : 'items-start'} ${className}`}>
+      <h2 className={`h-display ${centred ? 'max-w-[18ch]' : 'max-w-[16ch]'}`}>
         <WordsIn text={title} />
       </h2>
-      {lede ? (
-        <Appear delay={0.3} className="lede mt-7 max-w-[600px]">
-          <p>{lede}</p>
-        </Appear>
-      ) : null}
     </header>
+  );
+}
+
+/* The label twice in one grid cell: on hover the first slides out the
+   top while the copy rises in from below. */
+export function Roll({ children }: { children: ReactNode }) {
+  return (
+    <span className="roll">
+      <span>{children}</span>
+      <span aria-hidden>{children}</span>
+    </span>
   );
 }
 
 interface ButtonProps {
   href: string;
-  variant?: 'primary' | 'glass' | 'light';
+  variant?: 'light' | 'dark';
+  size?: 'md' | 'sm';
   arrow?: boolean;
   external?: boolean;
-  leading?: ReactNode;
   className?: string;
   onClick?: () => void;
   children: ReactNode;
@@ -40,44 +47,27 @@ interface ButtonProps {
 
 export function Button({
   href,
-  variant = 'primary',
+  variant = 'light',
+  size = 'md',
   arrow = false,
   external = false,
-  leading,
   className = '',
   onClick,
   children,
 }: ButtonProps) {
-  const pad = !arrow && variant === 'primary' ? 'pr-6' : '';
   return (
     <a
       href={href}
       onClick={onClick}
-      className={`btn btn--${variant} ${pad} ${className}`}
+      className={`btn btn--${variant} ${size === 'sm' ? 'btn--sm' : ''} roll-host ${className}`}
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
     >
-      {leading}
-      <span className="relative">{children}</span>
+      <Roll>{children}</Roll>
       {arrow ? (
-        <span className="btn__arrow" aria-hidden>
-          <ArrowRight size={15} strokeWidth={2} />
+        <span className="btn__dot" aria-hidden>
+          <ArrowRight size={13} strokeWidth={2.4} />
         </span>
       ) : null}
-    </a>
-  );
-}
-
-export function ArrowLink({ href, external, children }: { href: string; external?: boolean; children: ReactNode }) {
-  return (
-    <a
-      href={href}
-      className="link-arrow"
-      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-    >
-      {children}
-      <span className="link-arrow__icon" aria-hidden>
-        <ArrowRight size={13} strokeWidth={2.2} />
-      </span>
     </a>
   );
 }

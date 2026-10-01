@@ -7,10 +7,12 @@ consultancies and agencies. React 19 + Vite + Tailwind v4 + framer-motion.
 
 | Path | What it holds |
 | --- | --- |
-| `src/index.css` | Brand tokens (`@theme`): navy, accent blue, ink, Geist |
-| `src/styles/site.css` | Layout, buttons, cards, dark tiles, sheen gradient |
-| `src/components/motion.tsx` | Shared animations: entrances, word reveals, scroll-lit text, marquee |
-| `src/components/ui.tsx` | Section header, buttons, arrow link |
+| `src/index.css` | Dark theme tokens (`@theme`): near-black canvas, brand blues, Newsreader + Geist |
+| `src/styles/site.css` | Layout, film grain, tags, rolling-label buttons, cards, halftone light, orbs |
+| `src/components/motion.tsx` | Shared animations: blur entrances, letter/word reveals, rolling figures, marquee |
+| `src/components/DotWave.tsx` | Animated blue dot landscape (canvas) behind the hero and closing call |
+| `src/components/Halftone.tsx` | Drifting blue light behind a dot screen, used in place of photography |
+| `src/components/ui.tsx` | Section tag and header, buttons |
 | `src/sections/` | One file per page section, in page order in `src/App.tsx` |
 
 ## Content

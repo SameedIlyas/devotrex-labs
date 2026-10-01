@@ -1,73 +1,72 @@
-import { motion, useReducedMotion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
-import { Marquee, SPRING, TWEEN_EASE, WordsBlurIn } from '../components/motion';
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
+import { useRef } from 'react';
+import { DotWave } from '../components/DotWave';
+import { EASE, LettersBlurIn, Marquee } from '../components/motion';
 import { Button } from '../components/ui';
 import { stack } from '../data/company';
 
 /* ── hero ──────────────────────────────────────────────────────────
-   Centred column on a drifting navy field: a two-line
-   sheen headline whose words de-blur in, lede, two CTAs, and a
-   running strip of the tools we build with. Entrance order and
-   timings follow the template: words from 0.5s, lede
-   0.6s, CTAs 0.8s, strip 1.5s. */
+   The name, set huge in the serif, its letters de-blurring in one by
+   one; a lede and two actions under it; the blue dot landscape
+   rolling across the lower half; and the tools we build with running
+   along the bottom edge. Scrolling away sinks the copy and fades it. */
 
 const tools = stack.flatMap((g) => g.tools);
 
 export function Hero() {
+  const ref = useRef<HTMLElement | null>(null);
   const reduced = useReducedMotion();
-  const enter = (delay: number, y: number, tween = false) =>
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
+  const copyY = useTransform(scrollYProgress, [0, 1], [0, 140]);
+  const copyOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+
+  const enter = (delay: number) =>
     reduced
       ? {}
       : {
-          initial: { opacity: 0, y },
-          animate: { opacity: 1, y: 0 },
-          transition: tween ? { delay, duration: 1, ease: TWEEN_EASE } : { ...SPRING, delay },
+          initial: { opacity: 0, y: 20, filter: 'blur(8px)' },
+          animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+          transition: { delay, duration: 1, ease: EASE },
         };
 
   return (
-    <section id="top" className="relative isolate overflow-hidden">
-      <div className="hero-field" aria-hidden>
-        <div className="hero-field__glow hero-field__glow--a" />
-        <div className="hero-field__glow hero-field__glow--b" />
-      </div>
+    <section id="top" ref={ref} className="relative isolate flex min-h-[100svh] flex-col overflow-hidden">
+      <motion.div
+        className="fade-top absolute inset-x-0 bottom-0 -z-10 h-[58%]"
+        initial={reduced ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 2.2, ease: 'easeOut' }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(70%_80%_at_50%_100%,rgba(53,84,143,0.4),transparent_70%)]" />
+        <DotWave className="relative" />
+      </motion.div>
 
-      <div data-nav-theme="dark" className="mx-auto flex min-h-[100svh] max-w-[1100px] flex-col items-center justify-center px-4 pt-36 pb-20 text-center md:pt-44">
-        <h1 className="text-[clamp(2.6rem,7.4vw,5.6rem)] leading-[0.98] font-medium tracking-[-0.06em]">
-          <WordsBlurIn text="The engineering team behind your delivery" wordClassName="sheen-text pb-[0.08em]" />
+      <motion.div
+        className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col items-center px-4 pt-[clamp(130px,18vh,200px)] text-center"
+        style={reduced ? undefined : { y: copyY, opacity: copyOpacity }}
+      >
+        <h1 className="text-[clamp(4.6rem,15vw,11.5rem)] leading-[0.9] tracking-[-0.045em]">
+          <LettersBlurIn text="Devotrex" />
         </h1>
 
-        <motion.p className="mt-7 max-w-[600px] text-[17px] leading-[1.45] text-white/85 md:text-[18px]" {...enter(0.6, 20)}>
-          AI, automation, full-stack and legacy-systems engineering for boutique consultancies and
-          agencies, delivered under your brand.
+        <motion.p className="mt-8 max-w-[660px] text-[clamp(17px,1.5vw,20px)] leading-[1.45] text-ink-soft" {...enter(0.9)}>
+          The engineering team behind your delivery. AI, automation, full-stack and legacy-systems
+          work for boutique consultancies and agencies, shipped under your brand.
         </motion.p>
 
-        <motion.div className="mt-12 flex flex-wrap items-center justify-center gap-3" {...enter(0.8, 20)}>
-          <Button href="#contact" arrow>
-            Scope a project
-          </Button>
-          <Button
-            href="#services"
-            variant="glass"
-            leading={
-              <span className="flex -space-x-2" aria-hidden>
-                <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border-2 border-white/60 bg-navy">
-                  <img src="/devotrex-logo-2026.png" alt="" className="h-full w-full scale-[1.9] object-cover" />
-                </span>
-                <span className="grid h-9 w-9 place-items-center rounded-full border-2 border-white/60 bg-accent text-white">
-                  <Sparkles size={15} />
-                </span>
-              </span>
-            }
-          >
-            Explore services
+        <motion.div className="mt-10 flex flex-wrap items-center justify-center gap-3" {...enter(1.1)}>
+          <Button href="#contact">Scope a project</Button>
+          <Button href="#process" variant="dark" arrow>
+            How we work
           </Button>
         </motion.div>
-      </div>
+      </motion.div>
 
-      <motion.div className="relative -mt-4 pb-40" {...enter(1.5, 40)}>
-        <Marquee speed={100} gap={72} className="fade-x mx-auto max-w-[1440px]">
+      <motion.div className="relative mx-auto w-full max-w-[1240px] px-4 pt-16 pb-10" {...enter(1.5)}>
+        <p className="mb-5 text-center text-[14px] font-medium text-ink-mute">Tools we build with</p>
+        <Marquee speed={45} gap={64} className="fade-x">
           {tools.map((t) => (
-            <span key={t} className="text-[22px] font-semibold tracking-[-0.04em] whitespace-nowrap text-white/80">
+            <span key={t} className="text-[19px] font-medium tracking-[-0.03em] whitespace-nowrap text-white/70">
               {t}
             </span>
           ))}

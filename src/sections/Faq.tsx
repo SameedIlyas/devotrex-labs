@@ -1,14 +1,19 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
-import { useId, useState } from 'react';
-import { Appear } from '../components/motion';
-import { ArrowLink, SectionHeader } from '../components/ui';
+import { useId, useRef, useState } from 'react';
+import type { PointerEvent } from 'react';
+import { Halftone } from '../components/Halftone';
+import { Appear, EASE } from '../components/motion';
+import { Button, SectionHead } from '../components/ui';
 import { CONTACT_MAILTO } from '../lib/links';
 
-/* ── 008 · FAQs ───────────────────────────────────────────────────
-   Numbered capsules; the round dark button turns its plus into a
-   cross while the answer opens under the question. Answers restate
-   what the catalogue already says; no new claims. */
+/* ── FAQ ──────────────────────────────────────────────────────────
+   Question cards that open on hover: resting the pointer on a card
+   unfolds its answer, moving off folds it away. Only the hovered card
+   is open, and answers unfold downward, so the card under the pointer
+   never moves. Touch screens have no hover, so a tap toggles instead,
+   and keyboard focus opens a card the same way the pointer does.
+   Answers restate what the catalogue already says; no new claims. */
 
 const faqs = [
   {
@@ -34,23 +39,39 @@ const faqs = [
 ];
 
 export function Faq() {
-  const [open, setOpen] = useState<number | null>(0);
+  const [open, setOpen] = useState<number | null>(null);
+
   return (
     <section id="faq" className="section">
       <div className="wrap-narrow">
-        <SectionHeader title="Common Questions" />
+        <SectionHead title="Answers to what you’re wondering about." />
 
-        <div className="mt-16 space-y-2.5 md:mt-20">
+        <div className="mt-14 space-y-3 md:mt-20">
           {faqs.map((f, i) => (
-            <Appear key={f.q} delay={i * 0.1}>
-              <FaqItem n={i + 1} q={f.q} a={f.a} open={open === i} onToggle={() => setOpen(open === i ? null : i)} />
+            <Appear key={f.q} delay={i * 0.08} y={20}>
+              <FaqItem
+                q={f.q}
+                a={f.a}
+                open={open === i}
+                onOpen={() => setOpen(i)}
+                onClose={() => setOpen((o) => (o === i ? null : o))}
+              />
             </Appear>
           ))}
         </div>
 
-        <Appear delay={0.2} className="mt-12 flex flex-col items-center gap-3 text-center">
-          <p className="text-[17px] text-ink-soft">Have any other questions?</p>
-          <ArrowLink href={CONTACT_MAILTO}>Contact us</ArrowLink>
+        <Appear delay={0.15} y={30} className="mt-8">
+          <Halftone preset="ember" className="rounded-[16px]">
+            <div className="flex flex-col items-start justify-between gap-6 p-7 md:flex-row md:items-center md:p-9">
+              <div>
+                <h3 className="text-[clamp(1.7rem,2.8vw,2.2rem)] tracking-[-0.025em]">Still have a question?</h3>
+                <p className="mt-2 max-w-[42ch] text-[16px] text-white/75">
+                  Send it over. You will hear back from the people who would do the work.
+                </p>
+              </div>
+              <Button href={CONTACT_MAILTO}>Email us</Button>
+            </div>
+          </Halftone>
         </Appear>
       </div>
     </section>
@@ -58,33 +79,50 @@ export function Faq() {
 }
 
 interface FaqItemProps {
-  n: number;
   q: string;
   a: string;
   open: boolean;
-  onToggle: () => void;
+  onOpen: () => void;
+  onClose: () => void;
 }
 
-function FaqItem({ n, q, a, open, onToggle }: FaqItemProps) {
+function FaqItem({ q, a, open, onOpen, onClose }: FaqItemProps) {
   const id = useId();
+  /* The pointer type of the last press, so a tap toggles while a mouse
+     click on an already hover-opened card does not snap it shut. */
+  const pressedWith = useRef<string>('mouse');
+  const isMouse = (e: PointerEvent) => e.pointerType === 'mouse';
+
   return (
-    <div className="card rounded-[32px] md:rounded-[40px]">
+    <div
+      className={`rounded-[16px] transition-colors duration-500 ${open ? 'bg-surface-2' : 'bg-surface'}`}
+      onPointerEnter={(e) => isMouse(e) && onOpen()}
+      onPointerLeave={(e) => isMouse(e) && onClose()}
+    >
       <button
         type="button"
-        onClick={onToggle}
         aria-expanded={open}
         aria-controls={id}
-        className="flex w-full items-center gap-4 p-4 text-left md:gap-5 md:p-6"
+        onPointerDown={(e) => {
+          pressedWith.current = e.pointerType;
+        }}
+        onClick={() => {
+          if (pressedWith.current === 'mouse') onOpen();
+          else if (open) onClose();
+          else onOpen();
+        }}
+        onFocus={(e) => e.currentTarget.matches(':focus-visible') && onOpen()}
+        onBlur={onClose}
+        className="flex w-full items-center gap-5 px-6 py-6 text-left md:px-8 md:py-7"
       >
-        <span className="chip h-8 min-w-8 text-[14px]">{n}</span>
-        <span className="flex-1 text-[17px] font-medium tracking-[-0.025em] text-ink md:text-[20px]">{q}</span>
+        <span className="flex-1 text-[17px] font-medium tracking-[-0.025em] text-white md:text-[19px]">{q}</span>
         <motion.span
-          className="tile-dark grid h-12 w-12 shrink-0 place-items-center rounded-full"
+          className="grid h-8 w-8 shrink-0 place-items-center text-white"
           animate={{ rotate: open ? 45 : 0 }}
-          transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+          transition={{ duration: 0.45, ease: EASE }}
           aria-hidden
         >
-          <Plus size={20} />
+          <Plus size={24} strokeWidth={1.6} />
         </motion.span>
       </button>
       <AnimatePresence initial={false}>
@@ -94,10 +132,17 @@ function FaqItem({ n, q, a, open, onToggle }: FaqItemProps) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 36 }}
+            transition={{ duration: 0.5, ease: EASE }}
             className="overflow-hidden"
           >
-            <p className="max-w-[62ch] px-4 pb-7 pl-16 text-[16px] leading-[1.5] md:px-6 md:pl-[76px]">{a}</p>
+            <motion.p
+              className="max-w-[64ch] px-6 pb-7 text-[16px] leading-[1.55] md:px-8"
+              initial={{ y: -6, filter: 'blur(6px)' }}
+              animate={{ y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.5, ease: EASE }}
+            >
+              {a}
+            </motion.p>
           </motion.div>
         ) : null}
       </AnimatePresence>

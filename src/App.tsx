@@ -1,38 +1,36 @@
-import { Footer } from './components/Footer';
+import { ArtDefs } from './components/art/LineArt';
+import { Closing, Footer } from './components/Footer';
 import { Navbar } from './components/Navbar';
 import { About } from './sections/About';
-import { Capabilities } from './sections/capabilities/Capabilities';
-import { Catalogue } from './sections/Catalogue';
-import { Contact } from './sections/Contact';
+import { Compare } from './sections/Compare';
 import { Engagement } from './sections/Engagement';
 import { Faq } from './sections/Faq';
 import { Hero } from './sections/Hero';
+import { Positioning } from './sections/Positioning';
 import { Process } from './sections/Process';
-import { Stack } from './sections/Stack';
-import { Value } from './sections/Value';
+import { Services } from './sections/Services';
 
-/* devotrex is one page: numbered sections read top to bottom,
-   and every menu item is an anchor into it. The page opens and closes
-   on the same navy field. */
+/* devotrex is one page on a near-black field under a film grain: every
+   menu item is an anchor into it, and it opens and closes on the same
+   blue dot landscape. */
 export default function App() {
   return (
-    <div className="flex min-h-screen flex-col bg-paper font-sans text-ink">
+    <div className="flex min-h-screen flex-col bg-bg font-sans text-ink">
+      <ArtDefs />
+      <div className="grain" aria-hidden />
       <Navbar />
       <main className="relative flex-grow">
         <Hero />
         <About />
-        <Value />
-        <Capabilities />
+        <Services />
         <Process />
-        <Catalogue />
-        <Stack />
+        <Positioning />
         <Engagement />
+        <Compare />
         <Faq />
-        <div className="bg-gradient-to-b from-paper via-navy to-navy-deep via-20%">
-          <Contact />
-          <Footer />
-        </div>
+        <Closing />
       </main>
+      <Footer />
     </div>
   );
 }

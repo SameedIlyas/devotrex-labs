@@ -1,53 +1,90 @@
-import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'framer-motion';
-import { MessagesSquare, Rocket, SearchCode, Users } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { SectionHeader } from '../components/ui';
+import { motion, useMotionValueEvent, useReducedMotion, useScroll } from 'framer-motion';
+import type { ComponentType, CSSProperties, MouseEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { GapScene, PilotScene, ScaleScene, ShipScene } from '../components/art/ProcessArt';
+import { Halftone } from '../components/Halftone';
+import type { HalftonePreset } from '../components/Halftone';
+import { Appear, EASE } from '../components/motion';
+import { SectionHead } from '../components/ui';
 import { processSteps } from '../data/company';
 import type { ProcessStep } from '../data/company';
 
-/* ── 004 · process ────────────────────────────────────────────────
-   A zig-zag timeline on a centre rail. The rail fills with the sheen
-   gradient as the list scrolls through the viewport; each step turns
-   "active" once the fill reaches its node: the row gets its grey
-   capsule, the icon tile goes dark and the node lights up. On phones
-   the rail moves to the left edge and every row reads left to right. */
+/* ── process ──────────────────────────────────────────────────────
+   Four steps on a rail that fills as the section scrolls past: across
+   the top of the cards on wide screens, down their left edge on narrow
+   ones. Each step lights up when the rail reaches it (its node glows,
+   its number brightens, its scene comes up to full strength), so the
+   reader is walked through the order. Every card plays its own scene
+   (the gap, the pilot, shipping, scaling) and carries a light that
+   follows the pointer, rimming the card's edge nearest to it. */
 
-const icons: readonly LucideIcon[] = [MessagesSquare, SearchCode, Rocket, Users];
+const SCENES: readonly { Scene: ComponentType; preset: HalftonePreset }[] = [
+  { Scene: GapScene, preset: 'tide' },
+  { Scene: PilotScene, preset: 'dawn' },
+  { Scene: ShipScene, preset: 'mist' },
+  { Scene: ScaleScene, preset: 'ember' },
+];
 
 export function Process() {
   const listRef = useRef<HTMLOListElement | null>(null);
   const reduced = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: listRef, offset: ['start 0.65', 'end 0.65'] });
-  const fill = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
-  const [reached, setReached] = useState(reduced ? processSteps.length : 0);
-
-  useMotionValueEvent(scrollYProgress, 'change', (p) => {
-    if (reduced) return;
-    const n = processSteps.length;
-    /* Node i sits at the middle of row i, i.e. (i + 0.5) / n down the rail. */
-    setReached(processSteps.filter((_, i) => p >= (i + 0.35) / n).length);
+  const count = processSteps.length;
+  const [reached, setReached] = useState(reduced ? count : 0);
+  /* Wide: the row of cards is on screen at once, so the rail runs its
+     length while the row's top moves up the screen. Narrow: the cards
+     stack, so the rail follows the whole column. */
+  const wide = useMedia('(min-width: 1280px)');
+  const { scrollYProgress } = useScroll({
+    target: listRef,
+    offset: wide ? ['start 0.85', 'start 0.3'] : ['start 0.8', 'end 0.6'],
   });
+
+  useMotionValueEvent(scrollYProgress, 'change', (v) => {
+    if (reduced) return;
+    setReached(Math.min(count, Math.floor(v * (count - 1) + 0.02) + 1));
+  });
+
+  const fill = reduced ? undefined : { scaleX: scrollYProgress };
+  const fillY = reduced ? undefined : { scaleY: scrollYProgress };
 
   return (
     <section id="process" className="section">
-      <div className="wrap-narrow">
-        <SectionHeader
-          title="How We Work"
-          lede="Four steps from the first conversation to a standing team, each one proven before the next."
-        />
+      <div className="wrap">
+        <SectionHead title="Real delivery, without the guesswork." />
+        <Appear delay={0.2} className="mx-auto mt-6 max-w-[520px] text-center">
+          <p className="lede">Four steps from the first conversation to a standing team, each one earning the next.</p>
+        </Appear>
 
         <div className="relative mt-16 md:mt-24">
-          {/* z-[1]: above the rows' active capsules, below the nodes (z-10). */}
-          <div className="absolute top-12 bottom-12 left-[39px] z-[1] w-px bg-rule md:left-1/2" aria-hidden>
-            <motion.div
-              className="w-full bg-gradient-to-b from-sheen-1 via-sheen-3 to-accent"
-              style={{ height: reduced ? '100%' : fill }}
+          {/* horizontal rail, wide screens */}
+          <div className="relative mb-8 hidden h-6 xl:block" aria-hidden>
+            <span className="absolute top-1/2 right-[12.5%] left-[12.5%] h-px -translate-y-1/2 bg-white/10" />
+            <motion.span
+              className="absolute top-1/2 right-[12.5%] left-[12.5%] h-[2px] origin-left -translate-y-1/2 bg-gradient-to-r from-accent via-blue to-blue-pale shadow-[0_0_12px_rgba(157,177,224,0.7)]"
+              style={fill}
+            />
+            {processSteps.map((s, i) => (
+              <RailNode key={s.n} lit={i < reached} className="top-1/2" style={{ left: `${12.5 + i * 25}%` }} />
+            ))}
+          </div>
+
+          {/* vertical rail, narrow screens */}
+          <div className="absolute top-2 bottom-2 left-[11px] w-px xl:hidden" aria-hidden>
+            <span className="absolute inset-0 bg-white/10" />
+            <motion.span
+              className="absolute inset-0 origin-top bg-gradient-to-b from-accent via-blue to-blue-pale shadow-[0_0_12px_rgba(157,177,224,0.7)]"
+              style={fillY}
             />
           </div>
-          <ol ref={listRef} className="relative m-0 list-none space-y-4 p-0">
-            {processSteps.map((step, i) => (
-              <StepRow key={step.n} step={step} index={i} active={i < reached} />
+
+          <ol ref={listRef} className="m-0 grid list-none gap-5 p-0 xl:grid-cols-4 xl:gap-4">
+            {processSteps.map((s, i) => (
+              <li key={s.n} className="relative pl-10 xl:pl-0">
+                <RailNode lit={i < reached} className="top-11 left-[11px] xl:hidden" />
+                <Appear delay={i * 0.1} y={40} className="h-full">
+                  <StepCard step={s} index={i} lit={i < reached} />
+                </Appear>
+              </li>
             ))}
           </ol>
         </div>
@@ -56,73 +93,82 @@ export function Process() {
   );
 }
 
-interface StepRowProps {
-  step: ProcessStep;
-  index: number;
-  active: boolean;
+function useMedia(query: string) {
+  const [match, setMatch] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const onChange = () => setMatch(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [query]);
+  return match;
 }
 
-function StepRow({ step, index, active }: StepRowProps) {
-  const Icon = icons[index];
-  const flip = index % 2 === 1;
-
-  const iconSide = (
-    <div className="flex items-center gap-4">
-      <span
-        className={`grid h-20 w-20 shrink-0 place-items-center rounded-[24px] transition-all duration-500 ${
-          active ? 'tile-dark' : 'bg-paper-deep text-ink'
-        }`}
-      >
-        <Icon size={30} strokeWidth={1.8} />
-      </span>
-      <span className="chip">{step.n}</span>
-    </div>
-  );
-
-  const textSide = (
-    <div className={flip ? 'md:text-right' : ''}>
-      <div className="text-[12px] font-semibold tracking-[0.06em] text-accent uppercase">{step.kicker}</div>
-      <h3 className="mt-1.5 text-[21px] font-medium tracking-[-0.03em]">{step.title}</h3>
-      <p className="mt-2 max-w-[38ch] text-[15.5px] leading-[1.45] md:inline-block">{step.body}</p>
-    </div>
-  );
-
-  return (
-    <li
-      className={`relative grid grid-cols-[48px_1fr] items-center gap-x-6 rounded-[40px] px-4 py-8 transition-colors duration-500 md:grid-cols-[1fr_56px_1fr] md:gap-x-10 md:px-10 md:py-10 ${
-        active ? 'bg-paper-deep' : 'bg-transparent'
-      }`}
-    >
-      {/* Desktop: icon and text swap sides every row. */}
-      <div className={`hidden md:block ${flip ? 'md:order-3' : 'md:order-1 md:justify-self-end'}`}>{iconSide}</div>
-      <div className={`hidden md:block ${flip ? 'md:order-1 md:justify-self-end' : 'md:order-3'}`}>{textSide}</div>
-
-      <div className="z-10 grid place-items-center md:order-2">
-        <Node active={active} />
-      </div>
-
-      {/* Phone: one column to the right of the rail. */}
-      <div className="space-y-5 md:hidden">
-        {iconSide}
-        {textSide}
-      </div>
-    </li>
-  );
-}
-
-function Node({ active }: { active: boolean }) {
+function RailNode({ lit, className = '', style }: { lit: boolean; className?: string; style?: CSSProperties }) {
   return (
     <span
-      className={`grid h-9 w-9 place-items-center rounded-[11px] transition-all duration-500 ${
-        active ? 'sheen-bg shadow-[0_0_18px_rgba(111,140,203,0.55)]' : 'border border-rule bg-white'
-      }`}
+      className={`absolute z-10 grid h-6 w-6 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border transition-colors duration-500 ${
+        lit ? 'border-blue-soft bg-navy' : 'border-white/15 bg-bg'
+      } ${className}`}
+      style={style}
       aria-hidden
     >
-      <span
-        className={`grid h-[30px] w-[30px] place-items-center rounded-[9px] ${active ? 'bg-white/80' : 'bg-white'}`}
-      >
-        <span className={`h-3 w-3 rounded-full transition-colors duration-500 ${active ? 'bg-ink' : 'bg-transparent'}`} />
-      </span>
+      <motion.span
+        className="h-2 w-2 rounded-full bg-blue-pale"
+        animate={{ scale: lit ? 1 : 0, boxShadow: lit ? '0 0 12px 3px rgba(157,177,224,0.8)' : '0 0 0 0 rgba(0,0,0,0)' }}
+        transition={{ duration: 0.5, ease: EASE }}
+      />
     </span>
+  );
+}
+
+interface StepCardProps {
+  step: ProcessStep;
+  index: number;
+  lit: boolean;
+}
+
+function StepCard({ step, index, lit }: StepCardProps) {
+  const { Scene, preset } = SCENES[index % SCENES.length];
+
+  /* Feed the pointer position to the CSS spotlight. */
+  const track = (e: MouseEvent<HTMLElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
+    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
+  };
+
+  return (
+    <article
+      onMouseMove={track}
+      className={`spot card group relative flex h-full flex-col p-3 transition-[box-shadow,transform] duration-700 hover:-translate-y-1 ${
+        lit ? 'shadow-[inset_0_0_0_1px_rgba(157,177,224,0.22),0_30px_60px_-30px_rgba(53,84,143,0.6)]' : ''
+      }`}
+    >
+      <div className="flex items-center justify-between px-3 pt-3 pb-4">
+        <span
+          className={`font-serif text-[44px] leading-none tracking-[-0.03em] transition-colors duration-700 ${
+            lit ? 'text-white' : 'text-white/20'
+          }`}
+        >
+          {step.n}
+        </span>
+        <span className="chip chip--sm">{step.kicker}</span>
+      </div>
+
+      <Halftone
+        preset={preset}
+        className={`aspect-[4/3] rounded-[14px] transition-opacity duration-700 ${lit ? 'opacity-100' : 'opacity-45'}`}
+      >
+        <div className="absolute inset-0 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]">
+          <Scene />
+        </div>
+      </Halftone>
+
+      <div className="flex flex-1 flex-col px-3 pt-6 pb-4">
+        <h3 className="font-sans text-[20px] leading-tight font-medium tracking-[-0.03em]">{step.title}</h3>
+        <p className="mt-3 text-[15px] leading-[1.5]">{step.body}</p>
+      </div>
+    </article>
   );
 }

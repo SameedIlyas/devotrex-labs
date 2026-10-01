@@ -1,123 +1,105 @@
-import {
-  motion,
-  useAnimationFrame,
-  useMotionValue,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-} from 'framer-motion';
-import type { MotionValue } from 'framer-motion';
+import { motion, useAnimationFrame, useInView, useMotionValue, useReducedMotion } from 'framer-motion';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
 /* ── motion primitives ────────────────────────────────────────────
-   Every value here is lifted from the reference template's Framer
-   effects, so timings stay identical across sections:
-   - section/card entrances: spring 320 / 70, fired once at 50% in view
-   - heading words:          0.8s tween [.44,0,.56,1], 75ms stagger
-   - hero heading words:     blur 10px, spring 400 / 100, 50ms stagger
-   - reveal paragraph:       per-character colour tied to scroll
-   - marquees:               constant px/s, seamless loop */
+   The motion vocabulary of the reference layout, in one place:
+   - entrances:     fade + rise + de-blur, fired once as a block enters
+   - hero title:    letters de-blur and rise one after another on load
+   - headings:      words de-blur and rise one after another in view
+   - figures:       each digit rolls through the reel to its value
+   - marquees:      constant px/s, seamless loop */
 
-export const SPRING = { type: 'spring', stiffness: 320, damping: 70, mass: 1 } as const;
-export const TWEEN_EASE = [0.44, 0, 0.56, 1] as const;
-/* Fire when the element's top clears the bottom 15% of the viewport. A
+export const EASE = [0.16, 1, 0.3, 1] as const;
+export const SPRING = { type: 'spring', stiffness: 260, damping: 40, mass: 1 } as const;
+/* Fire when the element's top clears the bottom 12% of the viewport. A
    fraction-visible threshold never fires for blocks taller than the
-   screen (the stacked engagement cards on phones). */
-const IN_VIEW = { once: true, amount: 'some', margin: '0px 0px -15% 0px' } as const;
+   screen. */
+const IN_VIEW = { once: true, amount: 'some', margin: '0px 0px -12% 0px' } as const;
 
 interface AppearProps {
   delay?: number;
   y?: number;
+  blur?: boolean;
   className?: string;
   children?: ReactNode;
 }
 
-/* Fade (and optional rise) on first view. */
-export function Appear({ delay = 0, y = 0, className, children }: AppearProps) {
+/* Fade, rise and (optionally) de-blur on first view. */
+export function Appear({ delay = 0, y = 24, blur = true, className, children }: AppearProps) {
   const reduced = useReducedMotion();
   if (reduced) return <div className={className}>{children}</div>;
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y, filter: blur ? 'blur(8px)' : 'blur(0px)' }}
+      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       viewport={IN_VIEW}
-      transition={{ ...SPRING, delay }}
+      transition={{ duration: 1, ease: EASE, delay }}
     >
       {children}
     </motion.div>
   );
 }
 
-interface WordsProps {
+interface SplitProps {
   text: string;
   className?: string;
-  wordClassName?: string;
+  delay?: number;
 }
 
-/* Section headings: words fade up 10px one after another once in view. */
-export function WordsIn({ text, className, wordClassName }: WordsProps) {
-  return (
-    <Words
-      text={text}
-      className={className}
-      wordClassName={wordClassName}
-      hidden={{ opacity: 0, y: 10 }}
-      stagger={0.075}
-      delay={0.2}
-      transition={{ duration: 0.8, ease: TWEEN_EASE }}
-      trigger="view"
-    />
-  );
-}
-
-/* Hero heading: words de-blur and rise as the page loads. */
-export function WordsBlurIn({ text, className, wordClassName }: WordsProps) {
-  return (
-    <Words
-      text={text}
-      className={className}
-      wordClassName={wordClassName}
-      hidden={{ opacity: 0, y: 10, filter: 'blur(10px)' }}
-      stagger={0.05}
-      delay={0.5}
-      transition={{ type: 'spring', stiffness: 400, damping: 100, mass: 1 }}
-      trigger="mount"
-    />
-  );
-}
-
-interface WordsImplProps extends WordsProps {
-  hidden: Record<string, number | string>;
-  stagger: number;
-  delay: number;
-  transition: object;
-  trigger: 'view' | 'mount';
-}
-
-function Words({ text, className, wordClassName = '', hidden, stagger, delay, transition, trigger }: WordsImplProps) {
+/* Hero title: each letter de-blurs and rises in turn as the page loads. */
+export function LettersBlurIn({ text, className, delay = 0.2 }: SplitProps) {
   const reduced = useReducedMotion();
   if (reduced) return <span className={className}>{text}</span>;
+  return (
+    <motion.span
+      className={`inline-block whitespace-nowrap ${className ?? ''}`}
+      initial="hidden"
+      animate="show"
+      variants={{ show: { transition: { staggerChildren: 0.07, delayChildren: delay } } }}
+    >
+      <span className="sr-only">{text}</span>
+      {[...text].map((ch, i) => (
+        <motion.span
+          key={i}
+          aria-hidden
+          className="inline-block"
+          variants={{
+            hidden: { opacity: 0, y: 30, filter: 'blur(14px)' },
+            show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 1.1, ease: EASE } },
+          }}
+        >
+          {ch}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+}
 
+/* Headings: words de-blur and rise one after another once in view. */
+export function WordsIn({ text, className, delay = 0.1 }: SplitProps) {
+  const reduced = useReducedMotion();
+  if (reduced) return <span className={className}>{text}</span>;
   const words = text.split(' ');
-  const shown = { opacity: 1, y: 0, filter: 'blur(0px)', transition };
-  const play = trigger === 'view' ? { whileInView: 'show', viewport: IN_VIEW } : { animate: 'show' };
-
   return (
     <motion.span
       className={className}
       initial="hidden"
-      {...play}
-      variants={{ hidden: {}, show: { transition: { staggerChildren: stagger, delayChildren: delay } } }}
+      whileInView="show"
+      viewport={IN_VIEW}
+      variants={{ show: { transition: { staggerChildren: 0.06, delayChildren: delay } } }}
     >
       <span className="sr-only">{text}</span>
       {words.map((word, i) => (
         <Fragment key={`${word}-${i}`}>
           <motion.span
             aria-hidden
-            className={`inline-block ${wordClassName}`}
-            variants={{ hidden, show: shown }}
+            className="inline-block"
+            variants={{
+              hidden: { opacity: 0, y: 14, filter: 'blur(10px)' },
+              show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.9, ease: EASE } },
+            }}
           >
             {word}
           </motion.span>
@@ -128,70 +110,56 @@ function Words({ text, className, wordClassName = '', hidden, stagger, delay, tr
   );
 }
 
-/* ── scroll reveal paragraph ──────────────────────────────────────
-   Each character darkens from 10% to full ink as the paragraph moves
-   from 75% to 15% of the viewport height. The first `leadIn`
-   characters start dark, so the sentence opens already legible. */
+/* ── rolling figure ───────────────────────────────────────────────
+   Each digit is a reel that spins once through 0–9 and settles on its
+   value; reels to the right start a beat later. Anything that is not a
+   digit (+, %, –, letters) stays put. */
 
-const FAINT = 'rgba(7, 12, 22, 0.12)';
-const INK = '#070C16';
+const CELL = 1.1; /* em; one reel cell, a little taller than the glyph */
 
-interface ScrollRevealProps {
-  text: string;
-  leadIn?: number;
-  className?: string;
-}
-
-export function ScrollReveal({ text, leadIn = 22, className }: ScrollRevealProps) {
-  const ref = useRef<HTMLParagraphElement | null>(null);
+export function RollingNumber({ value, className = '' }: { value: string; className?: string }) {
+  const ref = useRef<HTMLSpanElement | null>(null);
+  const inView = useInView(ref, IN_VIEW);
   const reduced = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.75', 'start 0.15'] });
 
-  if (reduced) return <p ref={ref} className={className} style={{ color: INK }}>{text}</p>;
+  if (reduced) return <span className={className}>{value}</span>;
 
-  const words = text.split(' ');
-  const total = words.length;
-  let charIndex = 0;
-
+  let reel = 0;
   return (
-    <p ref={ref} className={className} aria-label={text}>
-      {words.map((word, w) => {
-        const start = w / total;
-        const step = 1 / total / word.length;
-        const first = charIndex;
-        charIndex += word.length + 1;
-        return (
-          <Fragment key={`${word}-${w}`}>
-            <span aria-hidden className="inline-block whitespace-nowrap">
-              {word.split('').map((ch, c) => (
-                <RevealChar
-                  key={c}
-                  ch={ch}
-                  progress={scrollYProgress}
-                  from={start + step * c}
-                  to={start + step * (c + 1)}
-                  lit={first + c < leadIn}
-                />
-              ))}
-            </span>{' '}
-          </Fragment>
-        );
-      })}
-    </p>
+    <span ref={ref} className={`inline-flex items-start tabular-nums ${className}`}>
+      <span className="sr-only">{value}</span>
+      {[...value].map((ch, i) =>
+        /\d/.test(ch) ? (
+          <Reel key={i} digit={Number(ch)} play={inView} delay={0.12 * reel++} />
+        ) : (
+          <span key={i} aria-hidden style={{ height: `${CELL}em`, lineHeight: CELL, whiteSpace: 'pre' }}>
+            {ch}
+          </span>
+        ),
+      )}
+    </span>
   );
 }
 
-interface RevealCharProps {
-  ch: string;
-  progress: MotionValue<number>;
-  from: number;
-  to: number;
-  lit: boolean;
-}
-
-function RevealChar({ ch, progress, from, to, lit }: RevealCharProps) {
-  const color = useTransform(progress, [from, to], [FAINT, INK]);
-  return <motion.span style={{ color: lit ? INK : color }}>{ch}</motion.span>;
+function Reel({ digit, play, delay }: { digit: number; play: boolean; delay: number }) {
+  const cells = [...Array(10).keys(), ...Array(digit + 1).keys()];
+  return (
+    <span aria-hidden className="relative inline-block overflow-hidden" style={{ height: `${CELL}em`, lineHeight: CELL }}>
+      <span className="invisible">{digit}</span>
+      <motion.span
+        className="absolute inset-x-0 top-0 flex flex-col items-center"
+        initial={{ y: '0em' }}
+        animate={{ y: play ? `${-(cells.length - 1) * CELL}em` : '0em' }}
+        transition={{ duration: 2, delay, ease: EASE }}
+      >
+        {cells.map((d, k) => (
+          <span key={k} style={{ height: `${CELL}em` }}>
+            {d}
+          </span>
+        ))}
+      </motion.span>
+    </span>
+  );
 }
 
 /* ── marquee ──────────────────────────────────────────────────────
@@ -200,13 +168,12 @@ function RevealChar({ ch, progress, from, to, lit }: RevealCharProps) {
 
 interface MarqueeProps {
   speed?: number;
-  direction?: 'left' | 'right';
   gap?: number;
   className?: string;
   children: ReactNode;
 }
 
-export function Marquee({ speed = 100, direction = 'left', gap = 0, className = '', children }: MarqueeProps) {
+export function Marquee({ speed = 60, gap = 0, className = '', children }: MarqueeProps) {
   const reduced = useReducedMotion();
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
@@ -222,11 +189,8 @@ export function Marquee({ speed = 100, direction = 'left', gap = 0, className = 
 
   useAnimationFrame((_, delta) => {
     if (reduced || width === 0) return;
-    const moved = (speed * delta) / 1000;
-    const sign = direction === 'left' ? -1 : 1;
-    let next = x.get() + sign * moved;
+    let next = x.get() - (speed * delta) / 1000;
     if (next <= -width) next += width;
-    if (next > 0) next -= width;
     x.set(next);
   });
 
